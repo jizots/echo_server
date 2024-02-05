@@ -5,7 +5,7 @@
 #include <arpa/inet.h> /*inet_ntoa*/
 #include <unistd.h> /*close*/
 
-# define BUFFER_SIZE 1000
+# define BUFFER_SIZE 10
 
 unsigned int    serverPort = 8000;
 
@@ -41,6 +41,7 @@ int main(int ac, char **av)
 		errorExit("connect() failed");
 
 	echoStringLen = strlen(echoString);
+	std::cout << "client entried StringLen: " << echoStringLen << std::endl;
 
 	// send message to echo server
 	if (send(_socket, echoString, echoStringLen, 0) != echoStringLen)
@@ -51,7 +52,7 @@ int main(int ac, char **av)
 	std::cout << "Recieved: ";
 	while (totalRecvBytes < echoStringLen)
 	{
-		if ((recvBytes = recv(_socket, echoBuffer, BUFFER_SIZE - 1, 0)) <= 0)
+		if ((recvBytes = recv(_socket, echoBuffer, BUFFER_SIZE, 0)) <= 0)
 			errorExit("recv() failed");
 		totalRecvBytes += recvBytes;
 		echoBuffer[recvBytes] = '\0';

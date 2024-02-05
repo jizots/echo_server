@@ -5,8 +5,10 @@
 #include <arpa/inet.h> /*inet_ntoa*/
 #include <unistd.h> /*close*/
 
-# define BUFFER_SIZE 1000
+// クライアントから受信できるリクエスト文字数
+# define BUFFER_SIZE 10
 
+// 外部からの通信を受け付けるポートを8000に指定
 unsigned int	serverPort = 8000;
 
 void	errorExit(const std::string& msg)
@@ -19,15 +21,29 @@ void	HandleTCP(int clientSocket)
 {
 	char	recivedMsg[BUFFER_SIZE] = {0};
 	size_t	recivedMsgSize;
+	static int	count = 1;
 
+	/* 
+	 * まずクライアントからのメッセージを1回うけとる。
+	 * ただし送信されたメッセージは、バッファーサイズの１０を超える可能性がある。
+	 * その場合は次のループで解説する。
+	*/
 	recivedMsgSize = recv(clientSocket, recivedMsg, BUFFER_SIZE, 0);
 	if (recivedMsgSize == -1)
 		errorExit("recv() error");
 
+	/*
+	 * メッセージを読み込み、１文字以上あれば以下のループに入る。
+	 * sendでは、クライアントに、先のrecvで読み取ったメッセージを送り返している。
+	*/
 	while (recivedMsgSize > 0)
 	{
 		if (send(clientSocket, recivedMsg, recivedMsgSize, 0) != recivedMsgSize)
 			errorExit("send() error");
+		/*
+		 * 次のrecvは、ソケットの受信バッファー内に読み取るべきメッセージが残っているかを確認している。
+		 * もし受信バッファーにデータが横っていた場合は、whileループが継続する。
+		*/
 		if ((recivedMsgSize = recv(clientSocket, recivedMsg, BUFFER_SIZE, 0)) < 0)
 			errorExit("recv() error2");
 	}
@@ -37,11 +53,16 @@ void	HandleTCP(int clientSocket)
 int main()
 {
 	int					serverSocket;
-	struct sockaddr_in	echoServerAddr;
+	struct sockaddr_in	echoServerAddr; /*bind()のために必要*/
 	socklen_t			clientLen;
 	struct sockaddr_in	echoClientaddr;
 	int					clientSocket;
 
+	/*
+	 * 外部からの通信を受け入れるための、ソケット(ファイルディスクリプタの一種)を作成する。
+	 * socketの第１引数はネットワークの設定で、AF-INETはIPv4の通信規格を指す。
+	 * 第２引数は通信ストリームの規格で、SOCK-STREAMはTCP/IPでの通信規格を指す。
+	*/
 	if ((serverSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 		errorExit("socket() error: ");
 
