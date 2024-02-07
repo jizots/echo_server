@@ -41,7 +41,7 @@ void	waitClientConnection(int new_socket)
 	// クライアントからの接続を受け入れる
 	while(waitingForData)
 	{
-		// データの非同期受信を試みる
+		// データの非同期受信を試みる。オプションを0にするとifに入らない。
 		ssize_t bytes_received = recv(new_socket, buffer, 1024, MSG_DONTWAIT);
 		if (bytes_received < 0)
 		{
